@@ -16,7 +16,7 @@ void Optics::init() {
   // configure the sensors
   qtr.setTypeRC();
   qtr.setSensorPins(sensorInputs, sensorCount);
-  qtr.setEmitterPin(2);
+  //qtr.setEmitterPin(2);
 }
 
 void Optics::debug() {

@@ -14,7 +14,6 @@ class Controller {
     float Ki;
     float Kd;
     float factor;
-    float lastError;
     float P;
     float I;
     float D;

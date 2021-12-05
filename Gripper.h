@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "Servo.h"
+#include "Utils.h"
 
 class Gripper {
   public:
