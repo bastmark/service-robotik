@@ -8,24 +8,26 @@
 #include "Motor.h"
 #include "Optics.h"
 #include "Utils.h"
+#include "Sonics.h"
 
 // base = 10kHz i think
 // Actual frequency = base / LOOP_FREQ
 #define LOOP_FREQ 10
 // Servo value (90 max)
-#define BASE_SPEED 80
-#define BUTTON_PIN 12
+#define BASE_SPEED 50
+#define BUTTON_PIN A0
 // ms turn 90 deg
-#define TURN_TIME 560
+#define TURN_TIME 600
 // ms delay after turn
 #define TURN_LEEWAY 300
 
 uint8_t sensorCount = 5;
 uint8_t sensorArray[] = {2, 3, 4, 5, 6};
 Optics optics(sensorCount, sensorArray);
-Motor motor(8, 9, BASE_SPEED);
+Motor motor(7, 8, BASE_SPEED);
 Controller controller;
-Gripper gripper(10, 11);
+Gripper gripper(9, 10);
+Sonics sonics(12, 11);
 
 void checkCalibration() {
   int buttonValue = digitalRead(BUTTON_PIN);
@@ -36,6 +38,19 @@ void checkCalibration() {
     digitalWrite(LED_BUILTIN, HIGH);
     optics.calibrateManual();
     digitalWrite(LED_BUILTIN, LOW);
+    motor.attachServos();
+  } else {
+    optics.calibrateMemory();
+  }
+}
+
+void checkGrab() {
+  int buttonValue = digitalRead(BUTTON_PIN);
+
+  if (buttonValue == LOW) {
+    motor.drive(0, 0);
+    motor.detachServos();
+    gripper.grab();
     motor.attachServos();
   }
 }
@@ -58,18 +73,21 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
 
   optics.init();
-  optics.calibrateMemory();
+  checkCalibration();
 
   digitalWrite(LED_BUILTIN, LOW);
 
   Serial.begin(9600);
 
   motor.init();
+  sonics.init();
 
   delay(1000);
 }
 
 void turn(direction d) {
+  motor.drive(0, 0);
+  
   float left = 0;
   float right = 0;
   
@@ -83,13 +101,17 @@ void turn(direction d) {
     // Execute a turn
   motor.drive(left, right);
   delay(TURN_TIME);
-  motor.drive(left, right);
+  motor.drive(1, 1);
   delay(TURN_LEEWAY);
 }
 
 
 void loop() {
   static boolean turning = false;
+  //Serial.print("DISTANCE: ");
+  //Serial.print(sonics.getDistance());
+  //Serial.println();
+  unsigned long distance = sonics.getDistance();
 
   float position = optics.getLinePosition();
   uint16_t* sensorValues = optics.getSensorValues();
@@ -97,33 +119,34 @@ void loop() {
 
   float left = control > 0 ? 1.0 - control : 1;
   float right = control < 0 ? 1.0 + control : 1;
+  
+  motor.drive(left, right);
 
-  //optics.debug();
-  printLeftRight(left, right);
-
-  /*motor.detachServos();
-  gripper.grab();
-  exit(0);*/
+  if (distance <= 4) {
+    motor.drive(0,0);
+    motor.detachServos();
+    gripper.grab();
+    motor.attachServos();
+  }
 
   // Normal loop with pid
   junction j = controller.detectJunction(sensorCount, sensorValues);
+  motor.drive(left, right);
 
-  /*switch (j) {
+  switch (j) {
     case T:
       turn(E);
       break;
     case L:
+      //turn(W);
       turn(E);
       break;
     case R:
-      turn(W);
+      turn(E);
       break;
-    default:
-      motor.drive(left, right);
-  }*/
-  motor.drive(left, right);
+  }
 
-  checkCalibration();
+  checkGrab();
 
   delay(LOOP_FREQ);
 }

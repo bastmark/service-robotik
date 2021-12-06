@@ -3,9 +3,9 @@
 
 Controller::Controller() {
   factor = 1;
-  Kp = 1.9;
-  Ki = -0.001;//0.003;
-  Kd = 16;//16
+  Kp = 1.8;//1.9;
+  Ki = 0;//-0.001;//0.003;
+  Kd = 20;//30;//16
 /*
   Kp = 0.07;
   Ki = 0.0008;
@@ -16,14 +16,14 @@ Controller::Controller() {
 
 junction Controller::detectJunction(uint8_t sensorCount, uint16_t* sensorValues) {
   int threshold = 800;
-  boolean state[sensorCount];
+  int state[sensorCount];
   
-  boolean t[] = {true, true, true, true, true};
-  boolean l[] = {true, true, true, false, false};
-  boolean r[] = {false, false, true, true, true};
+  int t[] = {2, 1, 1, 1, 2};
+  int l[] = {1, 1, 2, 0, 0};
+  int r[] = {0, 0, 2, 1, 1};
 
   for (uint8_t i = 0; i < sensorCount; i++) {
-    state[i] = (sensorValues[i] > threshold);
+    state[i] = (sensorValues[i] > threshold) ? 1: 0;
   }
 
   if (compareArray(state, t, sensorCount)) {
@@ -56,8 +56,8 @@ junction Controller::detectJunction(uint8_t sensorCount, uint16_t* sensorValues)
 float Controller::pid(float position) {
   const int window = 4;
   static float mAvg[window];
-  static float lastError = 0;
-  static float P, I, D = 0;
+  static float lastMean = 0;
+  float P, I, D = 0;
   
   // error range (-.5, .5)
   float error = 0.5 - position;
@@ -73,8 +73,8 @@ float Controller::pid(float position) {
   
   P = mean;
   I = I + mean;
-  D = mean - lastError;
-  lastError = mean;
+  D = mean - lastMean;
+  lastMean = mean;
   
   float control = (P*Kp + I*Ki + D*Kd) * factor;
 

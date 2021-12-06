@@ -10,6 +10,6 @@
 enum junction {C, T, R, L};
 enum direction {N, E, W, S};
 
-boolean compareArray(boolean* a, boolean* b, int len);
+boolean compareArray(int* a, int* b, int len);
 
 #endif
