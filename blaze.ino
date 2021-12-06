@@ -21,6 +21,12 @@
 // ms delay after turn
 #define TURN_LEEWAY 300
 
+// Behaviour
+#define JUNCTION_DETECTION false
+#define GRAB_ON_SIGHT false
+
+boolean stop = true;
+
 uint8_t sensorCount = 5;
 uint8_t sensorArray[] = {2, 3, 4, 5, 6};
 Optics optics(sensorCount, sensorArray);
@@ -44,14 +50,17 @@ void checkCalibration() {
   }
 }
 
-void checkGrab() {
+void checkButton() {
   int buttonValue = digitalRead(BUTTON_PIN);
 
   if (buttonValue == LOW) {
-    motor.drive(0, 0);
-    motor.detachServos();
-    gripper.grab();
-    motor.attachServos();
+    Serial.println("BUTTONPRESS");
+    if (stop) {
+      stop = false;
+    } else {
+      stop = true;
+    }
+    delay(500);
   }
 }
 
@@ -107,46 +116,44 @@ void turn(direction d) {
 
 
 void loop() {
-  static boolean turning = false;
-  //Serial.print("DISTANCE: ");
-  //Serial.print(sonics.getDistance());
-  //Serial.println();
   unsigned long distance = sonics.getDistance();
-
   float position = optics.getLinePosition();
   uint16_t* sensorValues = optics.getSensorValues();
   float control = controller.pid(position);
 
   float left = control > 0 ? 1.0 - control : 1;
   float right = control < 0 ? 1.0 + control : 1;
-  
-  motor.drive(left, right);
-
-  if (distance <= 4) {
-    motor.drive(0,0);
-    motor.detachServos();
-    gripper.grab();
-    motor.attachServos();
-  }
 
   // Normal loop with pid
-  junction j = controller.detectJunction(sensorCount, sensorValues);
-  motor.drive(left, right);
+  if (!stop) {
+    motor.drive(left, right);
+    
+    if (GRAB_ON_SIGHT && distance <= 4) {
+      motor.drive(0,0);
+      motor.detachServos();
+      gripper.grab();
+      motor.attachServos();
+    }
 
-  switch (j) {
-    case T:
-      turn(E);
-      break;
-    case L:
-      //turn(W);
-      turn(E);
-      break;
-    case R:
-      turn(E);
-      break;
+    if (JUNCTION_DETECTION) {
+      switch (controller.detectJunction(sensorCount, sensorValues)) {
+        case T:
+          turn(E);
+          break;
+        case L:
+          //turn(W);
+          turn(E);
+          break;
+        case R:
+          turn(E);
+          break;
+      }
+    }
+  } else {
+    motor.drive(0,0);
   }
 
-  checkGrab();
+  checkButton();
 
   delay(LOOP_FREQ);
 }
