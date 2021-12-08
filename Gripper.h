@@ -9,6 +9,7 @@ class Gripper {
   public:
     Gripper(int pinC, int pinL);
     void grab();
+    void store();
   private:
     int pinC;
     int pinL;

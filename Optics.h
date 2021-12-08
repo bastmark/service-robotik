@@ -11,6 +11,7 @@ class Optics {
     void calibrateMemory();
     void calibrateManual();
     float getLinePosition();
+    boolean lineVisible();
     uint16_t* getSensorValues();
   private:
     uint8_t sensorCount;

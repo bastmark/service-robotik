@@ -53,7 +53,7 @@ unsigned long Sonics::getEchoTime() {
   while(digitalRead(pinEcho))
      if(micros() > end_time) break;
        
-  end_time = micros( );
+  end_time = micros();
        
   /* Return time or timeout   */
   return((start_time < end_time ) ? end_time - start_time: 0);

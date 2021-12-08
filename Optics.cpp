@@ -43,6 +43,23 @@ void Optics::debug() {
   Serial.println();
 }
 
+boolean Optics::lineVisible() {
+  int threshold = 25;
+  int underThresh = 0;
+
+  for (int i = 0; i < sensorCount; i++) {
+    if (sensorValues[i] < threshold) {
+      underThresh += 1;
+    }
+  }
+
+  if (underThresh == sensorCount) {
+    return false;
+  }
+
+  return true;
+}
+
 float Optics::getLinePosition() {
   return (float) qtr.readLineBlack(sensorValues) / valueRange;
 }
