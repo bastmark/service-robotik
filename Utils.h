@@ -8,7 +8,7 @@
 #define CONSTR(V, MI, MA) ((V > MA) ? (MA) : (V < MI) ? MI : V)
 
 enum junction {C, T, R, L};
-enum direction {N, E, W, S};
+enum direction {FORWARD, LEFT, RIGHT, BACK};
 
 boolean compareArray(int* a, int* b, int len);
 

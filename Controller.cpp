@@ -3,9 +3,9 @@
 
 Controller::Controller() {
   factor = 1;
-  Kp = 1.8;//1.9;
-  Ki = 0;//-0.001;//0.003;
-  Kd = 20;//30;//16
+  Kp = 1.7;//1.6;//1.9;
+  Ki = -0.001;//0.003;
+  Kd = 20;//25;//30;//16
 /*
   Kp = 0.07;
   Ki = 0.0008;
@@ -54,7 +54,7 @@ junction Controller::detectJunction(uint8_t sensorCount, uint16_t* sensorValues)
 
 // position range (0, 1)
 float Controller::pid(float position) {
-  const int window = 4;
+  const int window = 10;
   static float mAvg[window];
   static float lastMean = 0;
   float P, I, D = 0;
@@ -69,7 +69,8 @@ float Controller::pid(float position) {
   }
 
   // Turn off moving average
-  // mean = error;
+  //mean = error;
+  //mean = CONSTR(mean, -0.5, 0.5);
   
   P = mean;
   I = I + mean;
