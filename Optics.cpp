@@ -44,7 +44,7 @@ void Optics::debug() {
 }
 
 boolean Optics::lineVisible() {
-  int threshold = 25;
+  int threshold = 50;
   int underThresh = 0;
 
   for (int i = 0; i < sensorCount; i++) {

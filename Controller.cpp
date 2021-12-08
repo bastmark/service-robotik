@@ -27,25 +27,10 @@ junction Controller::detectJunction(uint8_t sensorCount, uint16_t* sensorValues)
   }
 
   if (compareArray(state, t, sensorCount)) {
-    Serial.print("DETECTED T: ");
-    for (int i = 0; i < sensorCount; i++) {
-      Serial.print(state[i]);
-      Serial.print(" ");
-    }
     return T;
   } else if (compareArray(state, r, sensorCount)) {
-    Serial.print("DETECTED R: ");
-    for (int i = 0; i < sensorCount; i++) {
-      Serial.print(state[i]);
-      Serial.print(" ");
-    }
     return R;
   } else if (compareArray(state, l, sensorCount)) {
-    Serial.print("DETECTED L: ");
-    for (int i = 0; i < sensorCount; i++) {
-      Serial.print(state[i]);
-      Serial.print(" ");
-    }
     return L;
   }
 
@@ -54,10 +39,10 @@ junction Controller::detectJunction(uint8_t sensorCount, uint16_t* sensorValues)
 
 // position range (0, 1)
 float Controller::pid(float position) {
-  const int window = 10;
+  const int window = 1;
   static float mAvg[window];
   static float lastMean = 0;
-  float P, I, D = 0;
+  static float P, I, D = 0;
   
   // error range (-.5, .5)
   float error = 0.5 - position;

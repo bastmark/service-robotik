@@ -40,30 +40,32 @@ class Maze {
 
 public:
 
+     Maze(RoomIndex start);
+    
     // Takes 4 turns in the maze and backtracks out
-    inline int test() {
-        build_course_matrix();
-        index = 45;
-        int returned = 0;
+    // inline int test() {
+    //     build_course_matrix();
+    //     index = 45;
+    //     int returned = 0;
 
-        for(int i = 0; i < 4; i++){
-            returned = get_turn();
-            print_out("walking : ");
-            print_out(returned);
-            print_out('\n');
-        }
+    //     for(int i = 0; i < 4; i++){
+    //         returned = get_turn();
+    //         print_out("walking : ");
+    //         print_out(returned);
+    //         print_out('\n');
+    //     }
 
-        while (1){
-            int returned = get_turn_out();
-            print_out("exiting : ");
-            print_out(returned);
-            print_out('\n');
+    //     while (1){
+    //         int returned = get_turn_out();
+    //         print_out("exiting : ");
+    //         print_out(returned);
+    //         print_out('\n');
 
-            if (returned == -1) break;
-        }
+    //         if (returned == -1) break;
+    //     }
 
-        return 1;
-    }
+    //     return 1;
+    // }
 
     int get_turn();
 

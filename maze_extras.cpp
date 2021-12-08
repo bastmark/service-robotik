@@ -17,7 +17,7 @@ void Maze::build_course_matrix(){
 				rooms[i].mark_open(j);
 			}
 		}
-    }
+  }
 
 	return;
 }

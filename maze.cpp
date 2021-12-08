@@ -1,8 +1,12 @@
 #include "maze.h"
 
 // Different visualisation
-#define print_state(room_i) print(room_i);
-//#define print_state(room_i);
+// #define print_state(room_i) print(room_i);
+#define print_state(room_i);
+
+Maze::Maze(RoomIndex start){
+  Maze::index = start;
+}
 
 int Maze::get_neighbor(const RoomIndex room_i, Direction *neighbor) {
     RoomIndex next_room_i;
@@ -50,4 +54,3 @@ int Maze::get_turn_out(){
     }
     return -1;
 }
-

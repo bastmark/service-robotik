@@ -9,15 +9,16 @@
 #include "Optics.h"
 #include "Utils.h"
 #include "Sonics.h"
+#include "maze.h"
 
 // base = 10kHz i think
 // Actual frequency = base / LOOP_DIVIDER
 #define LOOP_DIVIDER 10
 // Servo value (90 max)
-#define BASE_SPEED 90
+#define BASE_SPEED 50
 #define BUTTON_PIN A0
 // ms turn 90 deg
-#define TURN_TIME 600
+#define TURN_TIME 560
 #define CELL_TIME 800
 // ms delay after turn
 #define TURN_LEEWAY 200
@@ -27,7 +28,7 @@
 #define JUNCTION_DETECTION true
 #define KILL_ON_SIGHT true
 
-int currentHeading = 3;
+int currentHeading = 1;
 direction path[] = {RIGHT, LEFT, LEFT, RIGHT, LEFT, RIGHT, RIGHT, LEFT};
 int hPath[] = {0, 3, 2, 3, 0, 1, 2, 1};
 
@@ -38,7 +39,8 @@ Motor motor(7, 8, BASE_SPEED);
 Controller controller;
 Gripper gripper(9, 10);
 Sonics sonics(12, 11);
-
+Maze maze(45);
+//5
 void checkCalibration() {
   int buttonValue = digitalRead(BUTTON_PIN);
 
@@ -89,6 +91,9 @@ void setup() {
   motor.detachServos();
   delay(1000);
   motor.attachServos();
+
+  // Init maze
+  maze.build_course_matrix();
 }
 
 void updateHeading(direction d) {
@@ -109,19 +114,24 @@ void updateHeading(direction d) {
       break;
   }
 
-  currentHeading = (currentHeading + mod) % 4;
+  currentHeading = abs((currentHeading + mod) % 4);
 }
 
 void turn(direction d) {
+
+  if (d == FORWARD) {
+      motor.drive(1, 1);
+      delay(TURN_LEEWAY);
+      return;
+  }
+  
   motor.drive(0, 0);
   updateHeading(d);
   
   float left = 0;
   float right = 0;
 
-  if (d == FORWARD) {
-    return;
-  } else if (d == RIGHT) {
+  if (d == RIGHT) {
     left = 1;
     right = -1;
   } else {
@@ -146,17 +156,40 @@ void end() {
 // Heading from DFS to turn direction
 // north: 0, east: 1, south: 2, west: 3
 direction headToDir(int head) {
-  int diff = (currentHeading - head) % 3;
+  int diff = (currentHeading - head) % 4;
 
-  if (diff == 3) {
+  if (diff == 1 || diff == -3) {
     return LEFT;
-  } else if (diff == 1) {
+  } else if (diff == 3 || diff == -1) {
     return RIGHT;
-  } else if (diff == 2) {
+  } else if (diff == 2 || diff == -2) {
     return BACK;
   }
   
   return FORWARD;
+}
+
+void testDfs() {
+  int heading;
+  direction dir;
+  
+  for (int i = 0; i < 20; i++) {
+    delay(200);
+    heading = maze.get_turn();
+    dir = headToDir(heading);
+    turn(dir);
+    
+    Serial.print("DFS: ");
+    Serial.print(heading);
+    Serial.print(" // headToDir: ");
+    Serial.print(dir == FORWARD ? "FWD" : dir == LEFT ? "LFT" : dir == BACK ? "BACK" : "RGT");
+    Serial.print(" // currentHeading: ");
+    Serial.print(currentHeading);
+    Serial.println();
+    delay(100);
+  }
+
+  end();
 }
 
 
@@ -171,21 +204,23 @@ void loop() {
   float left = control > 0 ? 1.0 - control : 1;
   float right = control < 0 ? 1.0 + control : 1;
 
-  Serial.println(currentHeading);
+  Serial.println(distance);
+
+  int heading;
+  direction dir;
 
   if (!lineVisible) {
-    if (distance > 8) {
+    if (distance > 15) {
       // Lost line, drive to middle of cell
       motor.drive(1,1);
       delay(CELL_TIME);
-      turn(RIGHT);
-      motor.drive(1,1);
-      delay(CELL_TIME);
-    } else {
-      // Dead end, turn around
-      turn(BACK);
-      end();
+      motor.drive(0,0);
     }
+    
+    heading = maze.get_turn();
+    dir = headToDir(heading);
+    turn(dir);
+    delay(CELL_TIME - TURN_LEEWAY);
   }
 
   // Normal loop with pid
@@ -201,11 +236,14 @@ void loop() {
 
   if (JUNCTION_DETECTION) {
     junction j = controller.detectJunction(sensorCount, sensorValues);
-
+    
     if (j) {
-      direction next = path[pathIdx];
-      turn(next);
-      pathIdx++; 
+      //direction next = path[pathIdx];
+      //turn(next);
+      //pathIdx++;
+      heading = maze.get_turn();
+      dir = headToDir(heading);
+      turn(dir);
     }
   }
 
