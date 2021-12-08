@@ -9,14 +9,11 @@
 class Maze {
 
     typedef uint8_t RoomIndex; // Max amount of cells = 256
-
-    static const uint8_t TEST_GOALS[3]; //= {0, 6, 42};
+    DirStack all_moves;
+    RoomIndex index;
+    Direction dir, neighbor;
 
     Room rooms[NUM_ROWS * NUM_COLS];
-
-    static inline RoomIndex get_index(const uint8_t row, const uint8_t col) {
-        return row * NUM_COLS + col;
-    }
 
     static inline int is_in_range(RoomIndex room_i){
         return (room_i / NUM_COLS >= 0 && room_i / NUM_COLS < NUM_ROWS) && (room_i % NUM_COLS >= 0 && room_i % NUM_COLS < NUM_COLS);
@@ -35,28 +32,44 @@ class Maze {
         }
     }
 
-    RoomIndex move(const RoomIndex room_i, const Direction dir);
-
     int get_neighbor(const RoomIndex room_i, Direction *neighbor);
 
-    int dfs(RoomIndex room_i);
-
-    void clear_visited(void);
-
     int get_rand_neighbor(RoomIndex *room_i);
+
     void print(RoomIndex robot_i);
-    bool goal_achived();
-    bool is_goal_room(RoomIndex room_i);
-    // void correct_shortest(RoomIndex room_i, DirStack &moves);
 
 public:
-    inline int solve(const uint8_t start_row, const uint8_t start_col) {
-        return dfs(get_index(start_row, start_col));
+
+    // Takes 4 turns in the maze and backtracks out
+    inline int test() {
+        build_course_matrix();
+        index = 45;
+        int returned = 0;
+
+        for(int i = 0; i < 4; i++){
+            returned = get_turn();
+            print_out("walking : ");
+            print_out(returned);
+            print_out('\n');
+        }
+
+        while (1){
+            int returned = get_turn_out();
+            print_out("exiting : ");
+            print_out(returned);
+            print_out('\n');
+
+            if (returned == -1) break;
+        }
+
+        return 1;
     }
 
-    void build_from_file(const char *filename);
+    int get_turn();
 
-    void print_info();
+    int get_turn_out();
+
+    void build_course_matrix();
 };
 
 #endif /* __maze_h__ */

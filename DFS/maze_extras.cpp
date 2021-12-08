@@ -1,35 +1,34 @@
 #include "maze.h"
-//#include "robot.h"
-#include <stdio.h>
-#include <iostream>
-#include <string>
-#include <fstream>
 
-void Maze::build_from_file(const char *filename){
-	std::ifstream input(filename, ::std::ios::binary);
-	char open;
-
+void Maze::build_course_matrix(){
+	// NUM_ROWS * NUM_COLS long
+	uint8_t maze_description[] = 
+		{0,1,1,0,0,0,1,1,0,0,1,0,0,1,1,0,0,0,0,1,0,1,0,0,0,0,1,1,
+		1,0,1,0,1,1,0,0,1,0,1,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,0,1,
+		1,0,1,0,0,1,1,0,1,0,1,1,1,1,0,0,1,0,1,1,0,1,1,0,0,0,0,1,
+		1,0,1,0,1,0,1,0,1,1,0,0,0,1,0,1,1,1,0,1,1,1,0,1,0,0,1,1,
+		1,0,1,0,1,0,1,0,0,1,0,0,0,1,1,1,0,1,0,1,0,1,1,1,1,0,1,1,
+		1,1,0,0,1,1,1,1,0,1,1,1,1,0,0,1,0,1,1,0,1,0,0,1,1,0,1,0,
+		0,1,0,0,1,0,0,1,1,1,0,0,0,0,0,1,1,1,0,0,0,1,0,1,1,0,0,1};
 	const uint16_t num_rooms = NUM_ROWS * NUM_COLS;
-    for (RoomIndex i = 0; i < num_rooms; i++) {
+	for (RoomIndex i = 0; i < num_rooms; i++) {
 		for(Direction j = 0; j < 4; j++){
-			input.get(open);
-			if (open == '1'){
+			if (maze_description[i * 4 + j]){
 				rooms[i].mark_open(j);
 			}
 		}
-		// Scan new line
-		input.get(open);
     }
 
 	return;
 }
 
+
+// for visualizing the matrix (turn on by redefining print_state in maze.cpp)
 void Maze::print(RoomIndex robot_i) {
-	static const char arrows[] = {'^', '>', 'v', '<'};
 	print_out('\n');
 	//top
 	for (uint8_t i = 0; i < NUM_COLS; i++) {
-		print_out(rooms[get_index(0, i)].is_open(Directions::NORTH) ? ".   " : ".___");
+		print_out(rooms[i].is_open(Directions::NORTH) ? ".   " : ".___");
 	}
 	print_out(".\n");
 
@@ -37,16 +36,12 @@ void Maze::print(RoomIndex robot_i) {
 		//middle and bottom
 
 		for (uint8_t i = 0; i < NUM_COLS; i++) {
-			RoomIndex room_i = get_index(j, i);
+			RoomIndex room_i = j * NUM_COLS + i;
 
 			print_out(rooms[room_i].is_open(Directions::WEST) ? "  " : "| ");
 
-			if (is_goal_room(room_i)) {
-				print_out('x');
-			} else if (room_i == robot_i) {
+			if (room_i == robot_i) {
 				print_out('o');
-			} else if (rooms[room_i].is_solution()) {
-				print_out(arrows[rooms[room_i].get_next()]);
 			} else if (rooms[room_i].is_visited()) {
 				print_out('.');
 			} else {
@@ -61,7 +56,7 @@ void Maze::print(RoomIndex robot_i) {
 		print_out('\n');
 
 		for (uint8_t i = 0; i < NUM_COLS; i++) {
-			RoomIndex room_i = get_index(j, i);
+			RoomIndex room_i = j * NUM_COLS + i;
 
 			print_out(rooms[room_i].is_open(Directions::WEST) ? '.' : '|');
 			print_out(rooms[room_i].is_open(Directions::SOUTH) ? "   " : "___");
@@ -72,16 +67,4 @@ void Maze::print(RoomIndex robot_i) {
 		}
 		print_out('\n');
 	}
-}
-
-void Maze::print_info() {
-	print_out("maze size: ");
-	print_out(sizeof(Maze) / 2);
-	print_out("\nstack size: ");
-	print_out(sizeof(uint32_t) * (((NUM_ROWS * NUM_COLS) / 16) + 1));
-
-	print_out("\nroom size: ");
-	print_out(sizeof(Room));
-
-	print_out('\n');
 }

@@ -41,10 +41,6 @@ public:
 
     Direction pop(void);
 
-#ifdef VERBOSE_STACK
-    void print(void);
-#endif
-
     inline int is_empty(void) {
         return (last_int == 0) && (last_dir == 0);
     }
@@ -52,6 +48,7 @@ public:
     inline int is_nonempty(void) {
         return (last_int > 0) || (last_dir > 0);
     }
+
 };
 
 
