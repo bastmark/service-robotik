@@ -27,7 +27,9 @@
 #define JUNCTION_DETECTION true
 #define KILL_ON_SIGHT true
 
-direction path[] = {E, W, W, E, W, E, E, W};
+int currentHeading = 3;
+direction path[] = {RIGHT, LEFT, LEFT, RIGHT, LEFT, RIGHT, RIGHT, LEFT};
+int hPath[] = {0, 3, 2, 3, 0, 1, 2, 1};
 
 uint8_t sensorCount = 5;
 uint8_t sensorArray[] = {2, 3, 4, 5, 6};
@@ -66,14 +68,6 @@ void checkButton(boolean* stop) {
   }
 }
 
-void printLeftRight(float l, float r) {
-  Serial.print("LEFT: ");
-  Serial.print(l);
-  Serial.print(" RIGHT: ");
-  Serial.print(r);
-  Serial.println();
-}
-
 void setup() {
   // Init calibration button and led
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -97,13 +91,37 @@ void setup() {
   motor.attachServos();
 }
 
+void updateHeading(direction d) {
+  int mod;
+
+  switch (d) {
+    case FORWARD:
+      mod = 0;
+      break;
+    case RIGHT:
+      mod = 1;
+      break;
+    case BACK:
+      mod = 2;
+      break;
+    case LEFT:
+      mod = 3;
+      break;
+  }
+
+  currentHeading = (currentHeading + mod) % 4;
+}
+
 void turn(direction d) {
   motor.drive(0, 0);
+  updateHeading(d);
   
   float left = 0;
   float right = 0;
-  
-  if (d == E) {
+
+  if (d == FORWARD) {
+    return;
+  } else if (d == RIGHT) {
     left = 1;
     right = -1;
   } else {
@@ -112,61 +130,33 @@ void turn(direction d) {
   }
     // Execute a turn
   motor.drive(left, right);
-  int turnTime = TURN_TIME * (d == S ? 2 : 1);
-  int leeWay = TURN_LEEWAY * (d == S ? 0 : 1);
+  int turnTime = TURN_TIME * (d == BACK ? 2 : 1);
+  int leeWay = TURN_LEEWAY * (d == BACK ? 0 : 1);
   
   delay(turnTime);
   motor.drive(1, 1);
   delay(TURN_LEEWAY);
 }
 
-//void turn(direction d) {
-//  motor.drive(0, 0);
-//  
-//  float left = 0;
-//  float right = 0;
-//  
-//  if (d == E) {
-//    left = 1;
-//    right = -1;
-//  } else {
-//    left = -1;
-//    right = 1;
-//  }
-//    // Execute a turn
-//  motor.drive(left, right);
-//  delay(TURN_LEEWAY);
-//  float position = optics.getLinePosition();
-//
-//  while (position > 0.52 | position < 0.48) {
-//    delay(LOOP_DIVIDER);
-//    position = optics.getLinePosition();
-//  }
-//
-//  motor.drive(0,0);
-//}
-
-unsigned long calibrateTurnTime() {
-  motor.drive(-1,1);
-  unsigned long startTime = millis();
-
-  delay(500);
-  
-  float position = optics.getLinePosition();
-  
-  while(position != 0.5) {
-    position = optics.getLinePosition();
-  }
-
-  unsigned long endTime = millis();
-  motor.drive(0,0);
-
-  return startTime - endTime;
-}
-
 void end() {
   delay(50);
   exit(0);
+}
+
+// Heading from DFS to turn direction
+// north: 0, east: 1, south: 2, west: 3
+direction headToDir(int head) {
+  int diff = (currentHeading - head) % 3;
+
+  if (diff == 3) {
+    return LEFT;
+  } else if (diff == 1) {
+    return RIGHT;
+  } else if (diff == 2) {
+    return BACK;
+  }
+  
+  return FORWARD;
 }
 
 
@@ -181,17 +171,19 @@ void loop() {
   float left = control > 0 ? 1.0 - control : 1;
   float right = control < 0 ? 1.0 + control : 1;
 
+  Serial.println(currentHeading);
+
   if (!lineVisible) {
     if (distance > 8) {
       // Lost line, drive to middle of cell
       motor.drive(1,1);
       delay(CELL_TIME);
-      turn(E);
+      turn(RIGHT);
       motor.drive(1,1);
       delay(CELL_TIME);
     } else {
       // Dead end, turn around
-      turn(S);
+      turn(BACK);
       end();
     }
   }
@@ -204,7 +196,7 @@ void loop() {
     motor.detachServos();
     gripper.store();
     motor.attachServos();
-    turn(S);
+    turn(BACK);
   }
 
   if (JUNCTION_DETECTION) {
