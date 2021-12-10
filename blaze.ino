@@ -17,11 +17,15 @@
 // Servo value (90 max)
 #define BASE_SPEED 50
 #define BUTTON_PIN A0
-// ms turn 90 deg
-#define TURN_TIME 560
-#define CELL_TIME 800
-// ms delay after turn
-#define TURN_LEEWAY 200
+
+// -------------TIMING ----------------
+//560
+#define TURN_TIME 540
+#define CELL_TIME (TURN_TIME * 1.33)
+#define TURN_LEEWAY (TURN_TIME * 0)
+#define DELAY_BEFORE_TURN (TURN_TIME * 0.2)
+// -------------------------------------
+
 #define WALL_DISTANCE_END 7
 
 // Behaviour
@@ -117,7 +121,9 @@ void updateHeading(direction d) {
   currentHeading = abs((currentHeading + mod) % 4);
 }
 
-void turn(direction d) {
+void turn(direction d, float control) {
+  motor.drive(1, 1);
+  delay(DELAY_BEFORE_TURN);
 
   if (d == FORWARD) {
       motor.drive(1, 1);
@@ -139,10 +145,17 @@ void turn(direction d) {
     right = 1;
   }
     // Execute a turn
-  motor.drive(left, right);
   int turnTime = TURN_TIME * (d == BACK ? 2 : 1);
   int leeWay = TURN_LEEWAY * (d == BACK ? 0 : 1);
-  
+
+  int correction = 0; //100 * (d == RIGHT ? -1 : 1) * control;
+
+  Serial.print("Correction: ");
+  Serial.print(correction);
+  Serial.println();
+  turnTime = turnTime + correction;
+
+  motor.drive(left, right);
   delay(turnTime);
   motor.drive(1, 1);
   delay(TURN_LEEWAY);
@@ -177,7 +190,7 @@ void testDfs() {
     delay(200);
     heading = maze.get_turn();
     dir = headToDir(heading);
-    turn(dir);
+    //turn(dir, control);
     
     Serial.print("DFS: ");
     Serial.print(heading);
@@ -204,10 +217,11 @@ void loop() {
   float left = control > 0 ? 1.0 - control : 1;
   float right = control < 0 ? 1.0 + control : 1;
 
-  Serial.println(distance);
-
   int heading;
   direction dir;
+
+  // Normal loop with pid
+  motor.drive(left, right);
 
   if (!lineVisible) {
     if (distance > 15) {
@@ -219,19 +233,20 @@ void loop() {
     
     heading = maze.get_turn();
     dir = headToDir(heading);
-    turn(dir);
-    delay(CELL_TIME - TURN_LEEWAY);
-  }
+    turn(dir, control);
 
-  // Normal loop with pid
-  motor.drive(left, right);
+    if (distance > 15) {
+      delay(CELL_TIME - TURN_LEEWAY);
+    }
+  }
+  
   
   if (KILL_ON_SIGHT && distance <= 4) {
     motor.drive(0,0);
     motor.detachServos();
     gripper.store();
     motor.attachServos();
-    turn(BACK);
+    turn(BACK, control);
   }
 
   if (JUNCTION_DETECTION) {
@@ -243,7 +258,7 @@ void loop() {
       //pathIdx++;
       heading = maze.get_turn();
       dir = headToDir(heading);
-      turn(dir);
+      turn(dir, control);
     }
   }
 

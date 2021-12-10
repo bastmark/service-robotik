@@ -12,6 +12,7 @@ class Motor {
     void detachServos();
     void drive(float l, float r);
     void init();
+    void setSpeed(int speed);
   private:
     int pinL;
     int pinR;

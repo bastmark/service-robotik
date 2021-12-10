@@ -8,6 +8,10 @@ Motor::Motor(int pinL, int pinR, int speed) {
   Motor::speed = speed;
 }
 
+void Motor::setSpeed(int speed) {
+  Motor::speed -= speed;
+}
+
 void Motor::attachServos() {
   left.attach(pinL);
   right.attach(pinR);
