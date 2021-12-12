@@ -15,7 +15,7 @@ Controller::Controller() {
 }
 
 junction Controller::detectJunction(uint8_t sensorCount, uint16_t* sensorValues) {
-  int threshold = 800;
+  int threshold = 700;
   int state[sensorCount];
   
   int t[] = {2, 1, 1, 1, 2};
@@ -39,7 +39,7 @@ junction Controller::detectJunction(uint8_t sensorCount, uint16_t* sensorValues)
 
 // position range (0, 1)
 float Controller::pid(float position) {
-  const int window = 1;
+  const int window = 4;
   static float mAvg[window];
   static float lastMean = 0;
   static float P, I, D = 0;
@@ -55,7 +55,6 @@ float Controller::pid(float position) {
 
   // Turn off moving average
   //mean = error;
-  //mean = CONSTR(mean, -0.5, 0.5);
   
   P = mean;
   I = I + mean;

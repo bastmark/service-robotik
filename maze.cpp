@@ -4,8 +4,12 @@
 // #define print_state(room_i) print(room_i);
 #define print_state(room_i);
 
-Maze::Maze(RoomIndex start){
+Maze::Maze(RoomIndex start, RoomIndex visited[], int visitedLength){
   Maze::index = start;
+
+  for (int i = 0; i < visitedLength; i++) {
+    rooms[visited[i]].mark_visited(); 
+  }
 }
 
 int Maze::get_neighbor(const RoomIndex room_i, Direction *neighbor) {

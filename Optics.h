@@ -2,6 +2,7 @@
 #define Optics_h
 
 #include "Arduino.h"
+#include "Utils.h"
 
 class Optics {
   public:

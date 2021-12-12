@@ -40,7 +40,7 @@ class Maze {
 
 public:
 
-     Maze(RoomIndex start);
+     Maze(RoomIndex start, RoomIndex visited[] = {}, int visitedLength = 0);
     
     // Takes 4 turns in the maze and backtracks out
     // inline int test() {
