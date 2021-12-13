@@ -68,6 +68,29 @@ uint16_t* Optics::getSensorValues() {
   return sensorValues;
 }
 
+junction Optics::detectJunction() {
+    int threshold = 720;
+  int state[sensorCount];
+  
+  int t[] = {2, 1, 1, 1, 2};
+  int l[] = {1, 1, 2, 0, 0};
+  int r[] = {0, 0, 2, 1, 1};
+
+  for (uint8_t i = 0; i < sensorCount; i++) {
+    state[i] = (sensorValues[i] > threshold) ? 1: 0;
+  }
+
+  if (compareArray(state, t, sensorCount)) {
+    return T;
+  } else if (compareArray(state, r, sensorCount)) {
+    return R;
+  } else if (compareArray(state, l, sensorCount)) {
+    return L;
+  }
+
+  return NULL;
+}
+
 void Optics::calibrateMemory() {
   qtr.calibrate();
   

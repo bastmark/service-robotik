@@ -11,5 +11,8 @@ enum junction {C, T, R, L};
 enum direction {FORWARD, LEFT, RIGHT, BACK};
 
 boolean compareArray(int* a, int* b, int len);
+direction headToDir(int current, int head);
+int updateHeading(int current, direction d);
+void end();
 
 #endif

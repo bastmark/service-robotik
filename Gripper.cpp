@@ -37,7 +37,7 @@ void Gripper::grab() {
 
 void Gripper::store() {  
   claw.attach(pinC);
-  claw.write(150);
+  claw.write(160);
   delay(800);
 
   lift.attach(pinL);

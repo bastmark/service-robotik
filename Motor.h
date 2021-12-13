@@ -13,6 +13,7 @@ class Motor {
     void drive(float l, float r);
     void init();
     void setSpeed(int speed);
+    void pid(float position);
   private:
     int pinL;
     int pinR;

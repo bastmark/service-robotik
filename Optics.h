@@ -14,6 +14,7 @@ class Optics {
     float getLinePosition();
     boolean lineVisible();
     uint16_t* getSensorValues();
+    junction detectJunction();
   private:
     uint8_t sensorCount;
     uint8_t* sensorInputs;
