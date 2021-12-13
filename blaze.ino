@@ -84,37 +84,6 @@ void calibrateTurnTimeNew() {
   
 }
 
-void calibrateTurnTime() {
-  junction j = NULL;
-
-  while (!j) {
-      delay(LOOP_DIVIDER);
-      motor.pid(optics.getLinePosition());
-      j = optics.detectJunction();
-  }
-
-  motor.drive(1,1);
-  delay(DELAY_BEFORE_TURN);
-  motor.drive(-1, 1);
-  
-  float pos1 = optics.getLinePosition();
-  unsigned long startTime = millis();
-
-  while (pos1 > 0.54 || pos1 < 0.46) {
-    delay(LOOP_DIVIDER);
-    pos1 = optics.getLinePosition();
-  }
-  
-  unsigned long time_ = millis() - startTime;
-
-  motor.drive(0,0);
-  
-  TURN_TIME = time_;
-
-  int addr = 20 * sizeof(uint16_t);
-  EEPROM.put(addr, TURN_TIME);
-}
-
 void loadTurnTime() {
   EEPROM.get(20 * sizeof(uint16_t), TURN_TIME);
   CELL_TIME = TURN_TIME * 1.33;
